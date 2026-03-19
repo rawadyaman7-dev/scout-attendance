@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚜ Scout Attendance</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0c0f14;--surface:#151921;--surface2:#1c2230;--border:#2a3040;--text:#e8ecf4;--text2:#8892a4;--accent:#6ee7b7;--accent2:#34d399;--danger:#f87171;--danger-bg:#2d1518;--success-bg:#0d2818;--loup:#6366f1;--lynx:#06b6d4;--milan:#14b8a6;--beluga:#22c55e;--espadon:#eab308;--grizzly:#f97316}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+  .app{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:24px 16px 140px}
+  .setup{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;gap:24px;text-align:center}
+  .setup-icon{font-size:64px}.setup h1{font-size:32px;font-weight:900;letter-spacing:-.03em}
+  .setup p{color:var(--text2);max-width:500px;line-height:1.6;font-size:15px}
+  .setup input{width:100%;max-width:440px;padding:14px 18px;background:var(--surface);border:2px solid var(--border);border-radius:12px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;transition:border-color .2s}
+  .setup input:focus{border-color:var(--accent)}.setup input::placeholder{color:var(--text2);font-family:'Outfit',sans-serif}
+  .btn-primary{padding:14px 40px;background:var(--accent);color:var(--bg);border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s;letter-spacing:-.01em}
+  .btn-primary:hover{background:var(--accent2);transform:translateY(-1px)}.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .setup-error{color:var(--danger);font-size:14px;font-weight:600}
+  .setup-hint{font-size:13px;color:var(--text2);max-width:440px;background:var(--surface);padding:14px 18px;border-radius:10px;border:1px solid var(--border);text-align:left;line-height:1.7}
+  .setup-hint a{color:var(--accent);text-decoration:none}
+  .setup-hint code{background:var(--surface2);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:12px}
+  .setup-warning{font-size:12px;color:var(--espadon);max-width:440px;background:rgba(234,179,8,.06);padding:10px 14px;border-radius:8px;border:1px solid rgba(234,179,8,.15);text-align:left;line-height:1.5}
+  .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+  .header h1{font-size:26px;font-weight:900;letter-spacing:-.03em;display:flex;align-items:center;gap:10px}
+  .header h1 span{color:var(--accent)}.header-actions{display:flex;gap:8px;align-items:center}
+  .btn-tab{padding:8px 18px;border:2px solid var(--border);border-radius:10px;background:transparent;color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s}
+  .btn-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(110,231,183,.06)}
+  .btn-logout{padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif}
+  .controls{display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+  .date-input{padding:8px 14px;background:var(--surface);border:2px solid var(--border);border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;outline:none;color-scheme:dark}
+  .date-input:focus{border-color:var(--accent)}.stats{display:flex;gap:8px;margin-left:auto}
+  .stat{padding:6px 16px;border-radius:10px;text-align:center;font-weight:800;font-size:18px;font-family:'JetBrains Mono',monospace}
+  .stat small{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-family:'Outfit',sans-serif}
+  .stat-p{background:var(--success-bg);color:var(--accent);border:1px solid rgba(110,231,183,.15)}
+  .stat-a{background:var(--danger-bg);color:var(--danger);border:1px solid rgba(248,113,113,.15)}
+  .filters{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+  .filter-btn{padding:5px 14px;border-radius:20px;border:2px solid var(--border);background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s}
+  .filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(110,231,183,.06)}
+  .filter-btn[data-p="Loup"].active{border-color:var(--loup);color:var(--loup)}
+  .filter-btn[data-p="Lynx"].active{border-color:var(--lynx);color:var(--lynx)}
+  .filter-btn[data-p="Milan"].active{border-color:var(--milan);color:var(--milan)}
+  .filter-btn[data-p="Beluga"].active{border-color:var(--beluga);color:var(--beluga)}
+  .filter-btn[data-p="Espadon"].active{border-color:var(--espadon);color:var(--espadon)}
+  .filter-btn[data-p="Grizzly"].active{border-color:var(--grizzly);color:var(--grizzly)}
+  .toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+  .search-input{flex:1;min-width:160px;padding:8px 14px;background:var(--surface);border:2px solid var(--border);border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;outline:none}
+  .search-input:focus{border-color:var(--accent)}.search-input::placeholder{color:var(--text2)}
+  .btn-quick{padding:8px 14px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .12s}
+  .btn-quick-p{background:rgba(110,231,183,.1);color:var(--accent)}.btn-quick-a{background:rgba(248,113,113,.1);color:var(--danger)}
+  .members{display:flex;flex-direction:column;gap:4px}
+  .member{border-radius:10px;border:1px solid var(--border);overflow:hidden;transition:all .15s}
+  .member.present{background:var(--surface);border-left:4px solid var(--accent)}
+  .member.absent{background:var(--surface);border-left:4px solid var(--danger)}
+  .member-top{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer;gap:10px;user-select:none}
+  .member-info{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+  .member-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .patrol-badge{font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;white-space:nowrap;flex-shrink:0;text-transform:uppercase;letter-spacing:.04em}
+  .patrol-Loup{background:rgba(99,102,241,.15);color:var(--loup)}
+  .patrol-Lynx{background:rgba(6,182,212,.15);color:var(--lynx)}
+  .patrol-Milan{background:rgba(20,184,166,.15);color:var(--milan)}
+  .patrol-Beluga{background:rgba(34,197,94,.15);color:var(--beluga)}
+  .patrol-Espadon{background:rgba(234,179,8,.15);color:var(--espadon)}
+  .patrol-Grizzly{background:rgba(249,115,22,.15);color:var(--grizzly)}
+  .status-btn{padding:5px 16px;border:none;border-radius:8px;font-weight:700;font-size:12px;white-space:nowrap;font-family:'Outfit',sans-serif;pointer-events:none;letter-spacing:.01em}
+  .status-present{background:rgba(110,231,183,.15);color:var(--accent)}
+  .status-absent{background:rgba(248,113,113,.15);color:var(--danger)}
+  .reason-input{width:100%;padding:8px 14px;border:none;border-top:1px solid rgba(248,113,113,.15);background:var(--danger-bg);color:var(--danger);font-family:'Outfit',sans-serif;font-size:13px;outline:none}
+  .reason-input::placeholder{color:rgba(248,113,113,.4)}
+  .submit-bar{position:fixed;bottom:0;left:0;right:0;padding:16px 20px;background:rgba(12,15,20,.92);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;justify-content:center;z-index:100;flex-direction:column;align-items:center;gap:8px}
+  .btn-submit{padding:14px 40px;border:none;border-radius:12px;background:var(--accent);color:var(--bg);font-size:16px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;max-width:500px;width:100%;letter-spacing:-.01em;transition:all .15s}
+  .btn-submit:hover{background:var(--accent2);transform:translateY(-1px)}.btn-submit:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .progress-bar{width:100%;max-width:400px;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+  .progress-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s ease}
+  .success{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;gap:16px;text-align:center}
+  .success-icon{width:80px;height:80px;border-radius:50%;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:700;animation:popIn .4s cubic-bezier(.34,1.56,.64,1) both}
+  @keyframes popIn{from{transform:scale(0)}to{transform:scale(1)}}
+  .success h1{font-size:28px;font-weight:900}.success p{color:var(--text2);font-size:15px}
+  .btn-reset{margin-top:12px;padding:12px 32px;border:2px solid var(--accent);border-radius:10px;background:transparent;color:var(--accent);font-size:15px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif}
+  .history-table{border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:12px}
+  .table-header{display:flex;padding:12px 16px;background:var(--surface2);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);border-bottom:1px solid var(--border)}
+  .table-row{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid rgba(42,48,64,.4);font-size:14px}
+  .table-row:last-child{border-bottom:none}
+  .rate-badge{display:inline-block;padding:2px 10px;border-radius:10px;font-weight:700;font-size:13px;font-family:'JetBrains Mono',monospace}
+  .rate-good{background:rgba(110,231,183,.1);color:var(--accent)}.rate-mid{background:rgba(234,179,8,.1);color:var(--espadon)}.rate-bad{background:rgba(248,113,113,.1);color:var(--danger)}
+  .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;gap:16px}
+  .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-text{font-size:15px;font-weight:600;color:var(--text2)}
+  .error-box{padding:12px;margin-top:12px;background:var(--danger-bg);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--danger);font-size:14px}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIG — your Airtable base & table IDs
+// ══════════════════════════════════════════════════════
+const CFG = {
+  BASE: "apppyBXcmAHZsAX49",
+  MT: "tblzt0tmXLtgzArtV",
+  PT: "tbltKnFzngfmcFzV7",
+  P_MID: "fldNCpbocsMHg6ryu",
+  P_DATE: "fldVZsfxNpQun9idM",
+  P_PRES: "fldmfKnMgfKc4Fod5",
+  P_ABS: "fldr6Imp0ZhGzoQlq",
+  P_WHY: "fldTNiJSE1Y3JE5il",
+};
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let token = localStorage.getItem("at_pat") || "";
+let screen = "setup";
+let tab = "attendance";
+let members = [];
+let att = {};
+let reasons = {};
+let meetDate = nextSat();
+let filter = "all";
+let searchQ = "";
+let loading = false;
+let submitting = false;
+let progress = 0;
+let error = "";
+let history = {};
+let loadingHist = false;
+let savedStats = {p:0,a:0};
+
+function nextSat(){const d=new Date(),diff=(6-d.getDay()+7)%7||0;d.setDate(d.getDate()+diff);return d.toISOString().split("T")[0]}
+function fmtDate(s){const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],p=s.split("-");return parseInt(p[2])+" "+mo[parseInt(p[1])-1]+" "+p[0]}
+function esc(s){return s==null?"":String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+
+// ══════════════════════════════════════════════════════
+// AIRTABLE API — using a CORS proxy for reliability
+// ══════════════════════════════════════════════════════
+const API = "https://api.airtable.com/v0/";
+
+async function atGet(path){
+  const r = await fetch(API+path, {headers:{Authorization:"Bearer "+token}});
+  if(!r.ok) throw new Error("API "+r.status+": "+(await r.text()).slice(0,200));
+  return r.json();
+}
+async function atPost(path, body){
+  const r = await fetch(API+path, {
+    method:"POST",
+    headers:{Authorization:"Bearer "+token,"Content-Type":"application/json"},
+    body:JSON.stringify(body)
+  });
+  if(!r.ok) throw new Error("API "+r.status+": "+(await r.text()).slice(0,200));
+  return r.json();
+}
+
+// ══════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════
+async function loadMembers(){
+  loading=true;error="";render();
+  try{
+    let all=[],offset=null;
+    do{
+      let url=CFG.BASE+"/"+CFG.MT+"?pageSize=100";
+      if(offset) url+="&offset="+encodeURIComponent(offset);
+      const data=await atGet(url);
+      all=all.concat(data.records||[]);
+      offset=data.offset||null;
+    }while(offset);
+
+    members=all.map(r=>{
+      const f=r.fields||{};
+      let pat=f["Patrouille"];
+      if(pat&&typeof pat==="object") pat=pat.name;
+      return {id:f["ID"],prenom:f["Prenom"]||"",nom:f["Nom"]||"",patrouille:pat||"—"};
+    }).filter(m=>m.id!=null).sort((a,b)=>{
+      if(a.patrouille!==b.patrouille) return a.patrouille.localeCompare(b.patrouille);
+      return a.prenom.localeCompare(b.prenom);
+    });
+    att={};reasons={};
+    members.forEach(m=>{att[m.id]=true});
+    screen="main";
+    localStorage.setItem("at_pat",token);
+  }catch(e){error="Connection failed: "+e.message}
+  loading=false;render();
+}
+
+async function loadHistory(){
+  loadingHist=true;render();
+  try{
+    let all=[],offset=null;
+    do{
+      let url=CFG.BASE+"/"+CFG.PT+"?pageSize=100";
+      if(offset) url+="&offset="+encodeURIComponent(offset);
+      const data=await atGet(url);
+      all=all.concat(data.records||[]);
+      offset=data.offset||null;
+    }while(offset);
+    history={};
+    all.forEach(r=>{
+      const f=r.fields||{},mid=f["Membre ID"];
+      if(mid==null)return;
+      if(!history[mid]) history[mid]={p:0,a:0};
+      history[mid].p+=(f["Presence"]||0);
+      history[mid].a+=(f["Absence"]||0);
+    });
+  }catch(e){console.error(e)}
+  loadingHist=false;render();
+}
+
+async function doSubmit(){
+  submitting=true;progress=0;error="";render();
+  try{
+    const entries=Object.entries(att),bs=10,total=Math.ceil(entries.length/bs);
+    let done=0;
+    for(let i=0;i<entries.length;i+=bs){
+      const chunk=entries.slice(i,i+bs);
+      const records=chunk.map(([mid,isP])=>{
+        const fields={};
+        fields[CFG.P_MID]=parseInt(mid);
+        fields[CFG.P_DATE]=meetDate;
+        fields[CFG.P_PRES]=isP?1:0;
+        fields[CFG.P_ABS]=isP?0:1;
+        if(!isP&&reasons[mid]) fields[CFG.P_WHY]=reasons[mid];
+        return {fields};
+      });
+      await atPost(CFG.BASE+"/"+CFG.PT,{records});
+      done++;progress=Math.round(done/total*100);render();
+    }
+    savedStats=getStats();screen="success";
+  }catch(e){error="Submit failed: "+e.message}
+  submitting=false;render();
+}
+
+function getStats(){const v=Object.values(att);return{p:v.filter(Boolean).length,a:v.filter(x=>!x).length}}
+function getFiltered(){
+  let list=members;
+  if(filter!=="all") list=list.filter(m=>m.patrouille===filter);
+  if(searchQ.trim()){const q=searchQ.toLowerCase();list=list.filter(m=>(m.prenom+" "+m.nom).toLowerCase().includes(q))}
+  return list;
+}
+function getPatrols(){return[...new Set(members.map(m=>m.patrouille))].filter(p=>p!=="—").sort()}
+
+// ══════════════════════════════════════════════════════
+// ACTIONS
+// ══════════════════════════════════════════════════════
+window.doConnect=()=>{const inp=document.getElementById("tok");if(inp)token=inp.value.trim();if(!token){error="Please paste your token";render();return}loadMembers()};
+window.doLogout=()=>{localStorage.removeItem("at_pat");token="";screen="setup";members=[];error="";render()};
+window.doReset=()=>{att={};members.forEach(m=>{att[m.id]=true});reasons={};meetDate=nextSat();screen="main";error="";render()};
+window.doTab=t=>{tab=t;if(t==="history")loadHistory();render()};
+window.doFilter=f=>{filter=f;render()};
+window.doToggle=id=>{att[id]=!att[id];render()};
+window.doMarkAll=val=>{getFiltered().forEach(m=>{att[m.id]=val});render()};
+window.doSearch=el=>{searchQ=el.value;render()};
+window.doDateChange=el=>{meetDate=el.value};
+window.doReason=(id,el)=>{reasons[id]=el.value};
+window.doSubmitAtt=doSubmit;
+window.doRefresh=loadHistory;
+
+// ══════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════
+function render(){
+  const app=document.getElementById("app");
+  if(screen==="setup"){app.innerHTML=rSetup();return}
+  if(screen==="success"){app.innerHTML=rSuccess();return}
+  app.innerHTML=rHeader()+(tab==="history"?rHistory():rAttendance());
+  // Keep search focus
+  if(searchQ){const el=document.querySelector(".search-input");if(el){el.focus();el.selectionStart=el.selectionEnd=searchQ.length}}
+}
+
+function rSetup(){
+  return '<div class="setup"><div class="setup-icon">⚜</div><h1>Scout Attendance</h1>'+
+  '<p>Connect your Airtable to take attendance. Data goes directly to your base.</p>'+
+  '<input type="password" id="tok" placeholder="Paste your Airtable Personal Access Token" value="'+esc(token)+'" onkeydown="if(event.key===\'Enter\')doConnect()">'+
+  (error?'<div class="setup-error">'+esc(error)+'</div>':'')+
+  '<button class="btn-primary" onclick="doConnect()"'+(loading?' disabled':'')+'>'+
+  (loading?'Connecting...':'Connect & Start')+'</button>'+
+  '<div class="setup-warning">⚠ <strong>Important:</strong> This file must be hosted on a web server (like GitHub Pages) to work. Opening it directly from your computer (file://) will cause a "Failed to fetch" error.</div>'+
+  '<div class="setup-hint"><strong>How to get your token:</strong><br>'+
+  '1. Go to <a href="https://airtable.com/create/tokens" target="_blank">airtable.com/create/tokens</a><br>'+
+  '2. Click <strong>"Create new token"</strong><br>'+
+  '3. Name: "Scout Attendance"<br>'+
+  '4. Scopes: <code>data.records:read</code> + <code>data.records:write</code><br>'+
+  '5. Access: your <strong>"Info des membres"</strong> base<br>'+
+  '6. Copy &amp; paste above</div></div>';
+}
+
+function rHeader(){
+  return '<div class="header"><h1>⚜ <span>Scout</span> Attendance</h1>'+
+  '<div class="header-actions">'+
+  '<button class="btn-tab'+(tab==="attendance"?" active":"")+'" onclick="doTab(\'attendance\')">Take Attendance</button>'+
+  '<button class="btn-tab'+(tab==="history"?" active":"")+'" onclick="doTab(\'history\')">View Totals</button>'+
+  '<button class="btn-logout" onclick="doLogout()">⏻</button></div></div>';
+}
+
+function rAttendance(){
+  const st=getStats(),patrols=getPatrols(),filtered=getFiltered();
+  let h='<div class="controls"><input type="date" class="date-input" value="'+meetDate+'" onchange="doDateChange(this)">'+
+  '<div class="stats"><div class="stat stat-p">'+st.p+'<small>Present</small></div>'+
+  '<div class="stat stat-a">'+st.a+'<small>Absent</small></div></div></div>';
+  h+='<div class="filters"><button class="filter-btn'+(filter==="all"?" active":"")+'" onclick="doFilter(\'all\')">All ('+members.length+')</button>';
+  patrols.forEach(p=>{const c=members.filter(m=>m.patrouille===p).length;h+='<button class="filter-btn'+(filter===p?" active":"")+'" data-p="'+p+'" onclick="doFilter(\''+p+'\')">'+p+' ('+c+')</button>'});
+  h+='</div><div class="toolbar"><input class="search-input" placeholder="Search member..." value="'+esc(searchQ)+'" oninput="doSearch(this)">'+
+  '<button class="btn-quick btn-quick-p" onclick="doMarkAll(true)">✓ All Present</button>'+
+  '<button class="btn-quick btn-quick-a" onclick="doMarkAll(false)">✗ All Absent</button></div>';
+  h+='<div class="members">';
+  filtered.forEach(m=>{
+    const isP=att[m.id];
+    h+='<div class="member '+(isP?'present':'absent')+'"><div class="member-top" onclick="doToggle('+m.id+')">'+
+    '<div class="member-info"><span class="member-name">'+esc(m.prenom)+' '+esc(m.nom)+'</span>'+
+    '<span class="patrol-badge patrol-'+esc(m.patrouille)+'">'+esc(m.patrouille)+'</span></div>'+
+    '<span class="status-btn '+(isP?'status-present':'status-absent')+'">'+(isP?'✓ Present':'✗ Absent')+'</span></div>';
+    if(!isP) h+='<input class="reason-input" placeholder="Reason (optional)..." value="'+esc(reasons[m.id]||'')+'" onclick="event.stopPropagation()" oninput="doReason('+m.id+',this)">';
+    h+='</div>';
+  });
+  h+='</div>';
+  if(error) h+='<div class="error-box">'+esc(error)+'</div>';
+  if(submitting){
+    h+='<div class="submit-bar"><span style="font-size:14px;font-weight:600;color:var(--accent)">Submitting... '+progress+'%</span>'+
+    '<div class="progress-bar"><div class="progress-fill" style="width:'+progress+'%"></div></div></div>';
+  }else{
+    h+='<div class="submit-bar"><button class="btn-submit" onclick="doSubmitAtt()">Submit Attendance — '+fmtDate(meetDate)+'</button></div>';
+  }
+  return h;
+}
+
+function rSuccess(){
+  return '<div class="success"><div class="success-icon">✓</div><h1>Attendance Submitted!</h1>'+
+  '<p>'+fmtDate(meetDate)+' — '+savedStats.p+' present, '+savedStats.a+' absent</p>'+
+  '<p style="font-size:13px">All '+members.length+' records pushed to Airtable ✓</p>'+
+  '<button class="btn-reset" onclick="doReset()">Take New Attendance</button></div>';
+}
+
+function rHistory(){
+  if(loadingHist) return '<div class="loading"><div class="spinner"></div><span class="loading-text">Loading totals...</span></div>';
+  const patrols=getPatrols(),filtered=getFiltered();
+  let h='<div class="filters"><button class="filter-btn'+(filter==="all"?" active":"")+'" onclick="doFilter(\'all\')">All</button>';
+  patrols.forEach(p=>{h+='<button class="filter-btn'+(filter===p?" active":"")+'" data-p="'+p+'" onclick="doFilter(\''+p+'\')">'+p+'</button>'});
+  h+='</div><div class="history-table"><div class="table-header"><span style="flex:2">Member</span><span style="flex:1">Patrol</span>'+
+  '<span style="flex:1;text-align:center">Present</span><span style="flex:1;text-align:center">Absent</span>'+
+  '<span style="flex:1;text-align:center">Rate</span></div>';
+  filtered.forEach(m=>{
+    const d=history[m.id]||{p:0,a:0},tot=d.p+d.a,rate=tot>0?Math.round(d.p/tot*100):0;
+    const rc=rate>=75?"rate-good":rate>=50?"rate-mid":"rate-bad";
+    h+='<div class="table-row"><span style="flex:2;font-weight:600">'+esc(m.prenom)+' '+esc(m.nom)+'</span>'+
+    '<span style="flex:1"><span class="patrol-badge patrol-'+esc(m.patrouille)+'">'+esc(m.patrouille)+'</span></span>'+
+    '<span style="flex:1;text-align:center;color:var(--accent);font-weight:700;font-family:\'JetBrains Mono\',monospace">'+d.p+'</span>'+
+    '<span style="flex:1;text-align:center;color:var(--danger);font-weight:700;font-family:\'JetBrains Mono\',monospace">'+d.a+'</span>'+
+    '<span style="flex:1;text-align:center"><span class="rate-badge '+rc+'">'+(tot>0?rate+"%":"—")+'</span></span></div>';
+  });
+  h+='</div><button class="btn-quick btn-quick-p" style="margin-top:16px" onclick="doRefresh()">↻ Refresh</button>';
+  return h;
+}
+
+// INIT
+if(token) loadMembers(); else render();
+</script>
+</body>
+</html>
